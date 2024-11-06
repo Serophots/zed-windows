@@ -1,0 +1,111 @@
+name: Build and Release Zed for Windows
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    inputs:
+      manual_release:
+        description: "Manual release?"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest release tag from Zed
+        id: latest_release
+        run: |
+          latest_release=$(curl -s "https://api.github.com/repos/zed-industries/zed/releases/latest" | jq -r .tag_name)
+          echo "LATEST_RELEASE=$latest_release" >> $GITHUB_ENV
+
+      - name: Check if there is a new release
+        id: check_release
+        run: |
+          my_release=$(curl -s "https://api.github.com/repos/xarunoba/zed-windows/releases/latest" | jq -r .tag_name)
+          if [ "$my_release" \> "$LATEST_RELEASE" ]; then
+            echo "LATEST_RELEASE=$my_release" >> $GITHUB_ENV
+            echo "NEW_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "NEW_RELEASE=false" >> $GITHUB_ENV
+          fi
+
+  build:
+    runs-on: windows-latest
+    needs: check
+    if: needs.check.outputs.NEW_RELEASE == 'true' || github.event.inputs.manual_release == 'true'
+    steps:
+      - name: Enable long paths in Git
+        run: |
+          git config --system core.longpaths true
+
+      - name: Enable long paths in Windows
+        shell: powershell
+        run: |
+          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
+            -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+
+      - name: Checkout Zed
+        uses: actions/checkout@v4
+        with:
+          repository: zed-industries/zed
+          ref: ${{ env.LATEST_RELEASE }}
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Build to Vulkan
+        run: $env:RUSTFLAGS="--cfg vulkan"; $env:CARGO_TARGET_DIR="target-vulkan"; cargo build --release
+
+      - name: Archive Vulkan build
+        uses: actions/upload-artifact@v4
+        with:
+          name: zed-release-vulkan-${{ env.LATEST_RELEASE }}
+          path: target-vulkan/release/zed.exe
+
+      - name: Build to OpenGL ES
+        run: $env:RUSTFLAGS="--cfg gles"; $env:CARGO_TARGET_DIR="target-gles"; cargo build --release
+
+      - name: Archive OpenGL ES build
+        uses: actions/upload-artifact@v4
+        with:
+          name: zed-release-gles-${{ env.LATEST_RELEASE }}
+          path: target-gles/release/zed.exe
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Vulkan release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: zed-release-vulkan-${{ env.LATEST_RELEASE }}
+          path: zed-release-vulkan
+
+      - name: Download OpenGL ES release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: zed-release-gles-${{ env.LATEST_RELEASE }}
+          path: zed-release-gles
+
+      - name: Zip the Vulkan release artifact
+        run: zip -r zed-release-vulkan-${{ env.LATEST_RELEASE }}.zip zed-release-vulkan/*
+
+      - name: Zip the OpenGL ES release artifact
+        run: zip -r zed-release-gles-${{ env.LATEST_RELEASE }}.zip zed-release-gles/*
+
+      - name: Upload release build artifact to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Zed for Windows ${{ env.LATEST_RELEASE }}
+          tag_name: ${{ env.LATEST_RELEASE }}
+          draft: false
+          make_latest: true
+          files: |
+            zed-release-vulkan-${{ env.LATEST_RELEASE }}.zip
+            zed-release-gles-${{ env.LATEST_RELEASE }}.zip

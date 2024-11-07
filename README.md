@@ -16,6 +16,7 @@ These releases are transparently built against the latest release tag of Zed usi
 
 - Builds for Vulkan and OpenGL ES (OpenGL ES may or may not work as it is barely supported by Zed)
 - Auto-updater is properly disabled for these builds using the `ZED_UPDATE_EXPLANATION` environment variable
+- Uses proper release channels for Zed via `crates/zed/RELEASE_CHANNEL`
 
 ## Usage
 

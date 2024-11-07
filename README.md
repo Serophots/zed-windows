@@ -3,7 +3,9 @@
 [![Release](https://github.com/xarunoba/zed-windows/actions/workflows/release.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/release.yml)
 
 This repository contains unnofficial builds of [Zed](https://github.com/zed-industries/zed) for Windows.
-Disclaimer: These builds may break at any time as they are not officially supported by Zed Industries.
+
+***Disclaimer**: These builds may break at any time as they are not officially supported by Zed Industries.*
+
 They are transparently built from the official [Zed](https://github.com/zed-industries/zed) repository using GitHub Actions based on the latest release of Zed.
 
 ## Features

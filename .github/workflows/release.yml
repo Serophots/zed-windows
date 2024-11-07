@@ -12,6 +12,7 @@ on:
         default: false
 
 jobs:
+
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -38,8 +39,9 @@ jobs:
     runs-on: windows-latest
     needs: check
     if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true'
-    outputs:
-      latest_release: ${{ needs.check.outputs.latest_release }}
+    strategy:
+      matrix:
+        build_type: [vulkan, opengl]
     steps:
       - name: Enable long paths in Git
         run: |
@@ -60,33 +62,16 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
-      - name: Build to Vulkan
+      - name: Build to ${{ matrix.build_type }}
         shell: powershell
         run: |
-          $env:RUSTFLAGS="--cfg vulkan" 
+          $env:RUSTFLAGS="--cfg ${{ matrix.build_type }}"
           cargo build --release
       
-      - name: Archive Vulkan build
+      - name: Archive ${{ matrix.build_type }} build
         uses: actions/upload-artifact@v4
         with:
-          name: zed-vulkan-${{ needs.check.outputs.latest_release }}
-          path: target/release/zed.exe
-      
-      - name: Cleanup build artifacts
-        shell: powershell
-        run: |
-          Remove-Item -Path target/release/zed.exe -Force
-
-      - name: Build to OpenGL ES
-        shell: powershell
-        run: |
-          $env:RUSTFLAGS="--cfg gles"
-          cargo build --release
-
-      - name: Archive OpenGL ES build
-        uses: actions/upload-artifact@v4
-        with:
-          name: zed-gles-${{ needs.check.outputs.latest_release }}
+          name: zed-${{ matrix.build_type }}-${{ needs.check.outputs.latest_release }}
           path: target/release/zed.exe
 
   release:
@@ -104,13 +89,13 @@ jobs:
       - name: Download OpenGL ES release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-gles-${{ needs.check.outputs.latest_release }}
-          path: zed-gles
+          name: zed-opengl-${{ needs.check.outputs.latest_release }}
+          path: zed-opengl
 
       - name: Zip the Vulkan and OpenGL ES builds
         run: |
           zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan/*
-          zip -r zed-gles-${{ needs.check.outputs.latest_release }}.zip zed-gles/*
+          zip -r zed-opengl-${{ needs.check.outputs.latest_release }}.zip zed-opengl/*
 
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -121,4 +106,4 @@ jobs:
           make_latest: true
           files: |
             zed-vulkan-${{ needs.check.outputs.latest_release }}.zip
-            zed-gles-${{ needs.check.outputs.latest_release }}.zip
+            zed-opengl-${{ needs.check.outputs.latest_release }}.zip

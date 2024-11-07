@@ -97,9 +97,6 @@ jobs:
         working-directory: zed-opengl
         run: zip ../zed-nightly-opengl-${{ needs.check.outputs.date }}.zip zed.exe
       - name: Calculate SHA256 checksum
-        id: checksum
-        working-directory: ./zed/target/release
-        shell: bash
         run: |
             sha256sum zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip > zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip.sha256
             sha256sum zed-nightly-opengl-${{ needs.check.outputs.date }}.zip > zed-nightly-opengl-${{ needs.check.outputs.date }}.zip.sha256

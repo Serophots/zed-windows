@@ -50,11 +50,18 @@ jobs:
         with:
           repository: zed-industries/zed
           ref: nightly
+      - name: Get toolchain channel
+        id: toolchain
+        shell: powershell
+        run: |
+          $channel = (Get-Content rust-toolchain.toml | Select-String -Pattern 'channel' | ForEach-Object { ($_ -split '"')[1] })
+          echo "channel=$channel" >> $GITHUB_OUTPUT
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      - name: Set release channel to nightly
-        run: |
-          echo "nightly" > crates/zed/RELEASE_CHANNEL
+        with:
+            toolchain: ${{ steps.toolchain.outputs.channel }}
+            target: "wasm32-wasip1"
+            components: "rustfmt, clippy"
       - name: Build to ${{ matrix.build_type }}
         shell: powershell
         run: |
@@ -89,6 +96,13 @@ jobs:
       - name: Zip the OpenGL ES build
         working-directory: zed-opengl
         run: zip ../zed-nightly-opengl-${{ needs.check.outputs.date }}.zip zed.exe
+      - name: Calculate SHA256 checksum
+        id: checksum
+        working-directory: ./zed/target/release
+        shell: bash
+        run: |
+            sha256sum zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip > zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip.sha256
+            sha256sum zed-nightly-opengl-${{ needs.check.outputs.date }}.zip > zed-nightly-opengl-${{ needs.check.outputs.date }}.zip.sha256
       - name: Generate Changelog
         run: echo "See [Zed release note](https://github.com/zed-industries/zed/releases/tag/nightly) for more information." > CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release
@@ -99,6 +113,7 @@ jobs:
           tag_name: nightly-${{ needs.check.outputs.date }}
           draft: false
           make_latest: false
+          fail_on_unmatched_files: true
           files: |
             zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip
             zed-nightly-opengl-${{ needs.check.outputs.date }}.zip

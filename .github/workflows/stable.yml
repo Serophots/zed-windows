@@ -63,8 +63,18 @@ jobs:
         with:
           repository: zed-industries/zed
           ref: ${{ needs.check.outputs.latest_release }}
+      - name: Get toolchain channel
+        id: toolchain
+        shell: powershell
+        run: |
+          $channel = (Get-Content rust-toolchain.toml | Select-String -Pattern 'channel' | ForEach-Object { ($_ -split '"')[1] })
+          echo "channel=$channel" >> $GITHUB_OUTPUT
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: ${{ steps.toolchain.outputs.channel }}
+            target: "wasm32-wasip1"
+            components: "rustfmt, clippy"
       - name: Set release channel to nightly
         run: |
           echo "stable" > crates/zed/RELEASE_CHANNEL
@@ -103,6 +113,13 @@ jobs:
       - name: Zip the OpenGL ES build
         working-directory: zed-opengl
         run: zip ../zed-opengl-${{ needs.check.outputs.latest_release }}.zip zed.exe
+      - name: Calculate SHA256 checksum
+        id: checksum
+        working-directory: ./zed/target/release
+        shell: bash
+        run: |
+            sha256sum zed-vulkan-${{ needs.check.outputs.latest_release }}.zip > zed-vulkan-${{ needs.check.outputs.latest_release }}.zip.sha256
+            sha256sum zed-opengl-${{ needs.check.outputs.latest_release }}.zip > zed-opengl-${{ needs.check.outputs.latest_release }}.zip.sha256
       - name: Generate Changelog
         run: echo "See [Zed release note](https://github.com/zed-industries/zed/releases/tag/${{ needs.check.outputs.latest_release }}) for more information." >> CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release
@@ -113,6 +130,9 @@ jobs:
           tag_name: ${{ needs.check.outputs.latest_release }}
           draft: false
           make_latest: true
+          fail_on_unmatched_files: true
           files: |
             zed-vulkan-${{ needs.check.outputs.latest_release }}.zip
+            zed-vulkan-${{ needs.check.outputs.latest_release }}.zip.sha256
             zed-opengl-${{ needs.check.outputs.latest_release }}.zip
+            zed-opengl-${{ needs.check.outputs.latest_release }}.zip.sha256

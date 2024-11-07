@@ -25,3 +25,11 @@ Download the latest release from the [Releases](https://github.com/xarunoba/zed-
 Extract the contents of the archive to a folder of your choice.
 
 Run the `zed.exe` executable.
+
+## Is this safe?
+
+Yes, this is safe. There are no changes to the official Zed codebase as seen in the GitHub Actions builds.
+
+### Windows Defender is complaining about the executable
+
+This is a false positive. See [this issue](https://github.com/zed-industries/zed/issues/14789) for more information.

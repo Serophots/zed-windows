@@ -8,16 +8,14 @@ These releases are transparently built against the latest release tag of Zed usi
 
 ## Builds
 
-| Channel | Workflow Status | Latest Successful Release |
-| ------- | ------ | -------------- |
-| Stable | [![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml) | [![Stable Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=v*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases/latest) |
-| Nightly | [![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml) | [![Nightly Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=nightly-*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases?q=nightly&expanded=true) |
+| Channel | Workflow Status | Latest Release | Remarks |
+| ------- | ------ | -------------- | -------- |
+| Stable | [![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml) | [![Stable Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=v*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases/latest) | Built against the [latest](https://github.com/zed-industries/zed/releases/latest) release tag of Zed (Checked every 3 hours) |
+| Nightly | [![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml) | [![Nightly Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=nightly-*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases?q=nightly&expanded=true) | Built against the [nightly](https://github.com/zed-industries/zed/releases/tag/nightly) release tag of Zed (Checked every 11 AM UTC, 4 hours after Zed releases a new nightly) |
 ## Features
 
-- Has two release channels: Stable and Nightly
-  - Stable releases are built against the latest release tag of Zed and is checked every 3 hours
-  - Nightly releases are built against the nightly release tag of Zed and is built and checked every 11 AM UTC (4 hours after Zed releases a new nightly)
-- Builds for Vulkan and OpenGL ES (OpenGL ES may have more issues than Vulkan)
+- Builds for Vulkan and OpenGL ES (OpenGL ES may or may not work as it is barely supported by Zed)
+- Auto-updater is properly disabled for these builds using the `ZED_UPDATE_EXPLANATION` environment variable
 
 ## Usage
 

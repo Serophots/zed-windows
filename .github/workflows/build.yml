@@ -2,7 +2,7 @@ name: Build and Release Zed for Windows
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch:
     inputs:
       manual_release:
@@ -14,28 +14,32 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      latest_release: ${{ steps.latest_release.outputs.tag }}
+      new_release: ${{ steps.check_release.outputs.new_release }}
     steps:
       - name: Get latest release tag from Zed
         id: latest_release
         run: |
           latest_release=$(curl -s "https://api.github.com/repos/zed-industries/zed/releases/latest" | jq -r .tag_name)
-          echo "LATEST_RELEASE=$latest_release" >> $GITHUB_ENV
+          echo "tag=$latest_release" >> $GITHUB_OUTPUT
 
       - name: Check if there is a new release
         id: check_release
         run: |
           my_release=$(curl -s "https://api.github.com/repos/xarunoba/zed-windows/releases/latest" | jq -r .tag_name)
-          if [ "$my_release" \> "$LATEST_RELEASE" ]; then
-            echo "LATEST_RELEASE=$my_release" >> $GITHUB_ENV
-            echo "NEW_RELEASE=true" >> $GITHUB_ENV
+          if [ "$my_release" != "${{ steps.latest_release.outputs.tag }}" ]; then
+            echo "new_release=true" >> $GITHUB_OUTPUT
           else
-            echo "NEW_RELEASE=false" >> $GITHUB_ENV
+            echo "new_release=false" >> $GITHUB_OUTPUT
           fi
 
   build:
     runs-on: windows-latest
     needs: check
-    if: needs.check.outputs.NEW_RELEASE == 'true' || github.event.inputs.manual_release == 'true'
+    if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true'
+    outputs:
+      latest_release: ${{ needs.check.outputs.latest_release }}
     steps:
       - name: Enable long paths in Git
         run: |
@@ -51,7 +55,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: zed-industries/zed
-          ref: ${{ env.LATEST_RELEASE }}
+          ref: ${{ needs.check.outputs.latest_release }}
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -62,7 +66,7 @@ jobs:
       - name: Archive Vulkan build
         uses: actions/upload-artifact@v4
         with:
-          name: zed-release-vulkan-${{ env.LATEST_RELEASE }}
+          name: zed-release-vulkan-${{ needs.check.outputs.latest_release }}
           path: target-vulkan/release/zed.exe
 
       - name: Build to OpenGL ES
@@ -71,7 +75,7 @@ jobs:
       - name: Archive OpenGL ES build
         uses: actions/upload-artifact@v4
         with:
-          name: zed-release-gles-${{ env.LATEST_RELEASE }}
+          name: zed-release-gles-${{ needs.check.outputs.latest_release }}
           path: target-gles/release/zed.exe
 
   release:
@@ -79,33 +83,32 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - name: Download Vulkan release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-release-vulkan-${{ env.LATEST_RELEASE }}
+          name: zed-release-vulkan-${{ needs.check.outputs.latest_release }}
           path: zed-release-vulkan
 
       - name: Download OpenGL ES release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-release-gles-${{ env.LATEST_RELEASE }}
+          name: zed-release-gles-${{ needs.check.outputs.latest_release }}
           path: zed-release-gles
 
       - name: Zip the Vulkan release artifact
-        run: zip -r zed-release-vulkan-${{ env.LATEST_RELEASE }}.zip zed-release-vulkan/*
+        run: zip -r zed-release-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-release-vulkan/*
 
       - name: Zip the OpenGL ES release artifact
-        run: zip -r zed-release-gles-${{ env.LATEST_RELEASE }}.zip zed-release-gles/*
+        run: zip -r zed-release-gles-${{ needs.check.outputs.latest_release }}.zip zed-release-gles/*
 
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Zed for Windows ${{ env.LATEST_RELEASE }}
-          tag_name: ${{ env.LATEST_RELEASE }}
+          name: Zed for Windows ${{ needs.check.outputs.latest_release }}
+          tag_name: ${{ needs.check.outputs.latest_release }}
           draft: false
           make_latest: true
           files: |
-            zed-release-vulkan-${{ env.LATEST_RELEASE }}.zip
-            zed-release-gles-${{ env.LATEST_RELEASE }}.zip
+            zed-release-vulkan-${{ needs.check.outputs.latest_release }}.zip
+            zed-release-gles-${{ needs.check.outputs.latest_release }}.zip

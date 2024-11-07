@@ -6,7 +6,7 @@ This repository contains unnofficial builds of [Zed](https://github.com/zed-indu
 
 ***Disclaimer**: These builds may break at any time as they are not officially supported by Zed Industries.*
 
-They are transparently built from the official [Zed](https://github.com/zed-industries/zed) repository using GitHub Actions based on the latest release of Zed.
+These releases are transparently built against the latest release tag of Zed using Github Actions.
 
 ## Features
 

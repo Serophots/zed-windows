@@ -1,6 +1,9 @@
 name: Build and Release Zed for Windows
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     - cron: "0 */3 * * *"
   workflow_dispatch:
@@ -10,6 +13,10 @@ on:
         required: true
         type: boolean
         default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:

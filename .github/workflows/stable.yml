@@ -73,7 +73,7 @@ jobs:
       - name: Archive ${{ matrix.build_type }} build
         uses: actions/upload-artifact@v4
         with:
-          name: zed-${{ matrix.build_type }}-${{ needs.check.outputs.latest_release }}
+          name: zed-${{ matrix.build_type }}
           path: target/release/zed.exe
 
   release:
@@ -86,17 +86,19 @@ jobs:
       - name: Download Vulkan release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-vulkan-${{ needs.check.outputs.latest_release }}
+          name: zed-vulkan
           path: zed-vulkan
       - name: Download OpenGL ES release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-opengl-${{ needs.check.outputs.latest_release }}
+          name: zed-opengl
           path: zed-opengl
-      - name: Zip the Vulkan and OpenGL ES builds
-        run: |
-          zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan/*
-          zip -r zed-opengl-${{ needs.check.outputs.latest_release }}.zip zed-opengl/*
+      - name: Zip the Vulkan build
+        working-directory: zed-vulkan
+        run: zip ../zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed.exe
+      - name: Zip the OpenGL ES build
+        working-directory: zed-opengl
+        run: zip ../zed-opengl-${{ needs.check.outputs.latest_release }}.zip zed.exe
       - name: Generate Changelog
         run: echo "See [Zed release note](https://github.com/zed-industries/zed/releases/tag/${{ needs.check.outputs.latest_release }}) for more information." >> CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release

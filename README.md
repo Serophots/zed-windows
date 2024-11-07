@@ -13,7 +13,7 @@ These releases are transparently built against the latest release tag of Zed usi
 
 - Has two release channels: Stable and Nightly
   - Stable releases are built against the latest stable release tag of Zed and is checked every 3 hours
-  - Nightly releases are built against the latest commit of Zed and is released every 12 AM UTC.
+  - Nightly releases are built against the latest commit of Zed and is released every 11 AM UTC. (4 hours after Zed releases nightly builds)
 - Builds for Vulkan and OpenGL ES (OpenGL ES may have more issues than Vulkan)
 
 ## Usage

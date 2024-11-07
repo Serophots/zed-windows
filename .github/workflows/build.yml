@@ -61,22 +61,30 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
       - name: Build to Vulkan
-        run: $env:RUSTFLAGS="--cfg vulkan"; $env:CARGO_TARGET_DIR="target-vulkan"; cargo build --release
+        shell: powershell
+        run: |
+          $env:RUSTFLAGS="--cfg vulkan"; 
+          cargo build --release
+          mv target/release/zed.exe target/release/zed-vulkan.exe
+
+      - name: Build to OpenGL ES
+        shell: powershell
+        run: |
+          $env:RUSTFLAGS="--cfg gles";
+          cargo build --release
+          mv target/release/zed.exe target/release/zed-gles.exe
 
       - name: Archive Vulkan build
         uses: actions/upload-artifact@v4
         with:
-          name: zed-release-vulkan-${{ needs.check.outputs.latest_release }}
-          path: target-vulkan/release/zed.exe
-
-      - name: Build to OpenGL ES
-        run: $env:RUSTFLAGS="--cfg gles"; $env:CARGO_TARGET_DIR="target-gles"; cargo build --release
+          name: zed-vulkan-${{ needs.check.outputs.latest_release }}
+          path: target/release/zed-vulkan.exe
 
       - name: Archive OpenGL ES build
         uses: actions/upload-artifact@v4
         with:
-          name: zed-release-gles-${{ needs.check.outputs.latest_release }}
-          path: target-gles/release/zed.exe
+          name: zed-gles-${{ needs.check.outputs.latest_release }}
+          path: target/release/zed-gles.exe
 
   release:
     needs: [check, build]
@@ -87,20 +95,17 @@ jobs:
       - name: Download Vulkan release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-release-vulkan-${{ needs.check.outputs.latest_release }}
-          path: zed-release-vulkan
+          name: zed-vulkan-${{ needs.check.outputs.latest_release }}
 
       - name: Download OpenGL ES release artifact
         uses: actions/download-artifact@v4
         with:
-          name: zed-release-gles-${{ needs.check.outputs.latest_release }}
-          path: zed-release-gles
+          name: zed-gles-${{ needs.check.outputs.latest_release }}
 
-      - name: Zip the Vulkan release artifact
-        run: zip -r zed-release-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-release-vulkan/*
-
-      - name: Zip the OpenGL ES release artifact
-        run: zip -r zed-release-gles-${{ needs.check.outputs.latest_release }}.zip zed-release-gles/*
+      - name: Zip the Vulkan and OpenGL ES builds
+        run: |
+          zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan.exe
+          zip -r zed-gles-${{ needs.check.outputs.latest_release }}.zip zed-gles.exe
 
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -110,5 +115,5 @@ jobs:
           draft: false
           make_latest: true
           files: |
-            zed-release-vulkan-${{ needs.check.outputs.latest_release }}.zip
-            zed-release-gles-${{ needs.check.outputs.latest_release }}.zip
+            zed-vulkan-${{ needs.check.outputs.latest_release }}.zip
+            zed-gles-${{ needs.check.outputs.latest_release }}.zip

@@ -69,6 +69,7 @@ jobs:
 
   release:
     needs: [check, build]
+    if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

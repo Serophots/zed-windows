@@ -1,9 +1,9 @@
-# Zed Builds for Windows (Unofficial)
+# Zed for Windows (Unofficial)
 
 [![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml)
 [![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml)
 
-This repository contains unnofficial builds of [Zed](https://github.com/zed-industries/zed) for Windows.
+This repository contains unofficial builds of [Zed](https://github.com/zed-industries/zed) for Windows.
 
 ***Disclaimer**: These builds may break at any time as they are not officially supported by Zed Industries.*
 
@@ -13,7 +13,7 @@ These releases are transparently built against the latest release tag of Zed usi
 
 - Has two release channels: Stable and Nightly
   - Stable releases are built against the latest stable release tag of Zed and is checked every 3 hours
-  - Nightly releases are built against the latest commit of Zed and is released every 11 AM UTC. (4 hours after Zed releases nightly builds)
+  - Nightly releases are built against the latest commit of Zed and is released every day at 11 AM UTC. (4 hours after Zed releases their nightly build)
 - Builds for Vulkan and OpenGL ES (OpenGL ES may have more issues than Vulkan)
 
 ## Usage

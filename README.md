@@ -1,14 +1,17 @@
 # Zed for Windows (Unofficial)
 
-[![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml)
-[![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml)
-
 This repository contains unofficial builds of [Zed](https://github.com/zed-industries/zed) for Windows.
 
 ***Disclaimer**: These builds may break at any time as they are not officially supported by Zed Industries.*
 
 These releases are transparently built against the latest release tag of Zed using Github Actions.
 
+## Builds
+
+| Channel | Status | Latest Release |
+| ------- | ------ | -------------- |
+| Stable | [![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml) | [![Stable Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=v*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases/latest) |
+| Nightly | [![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml) | [![Nightly Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=nightly-*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases?q=nightly&expanded=true) |
 ## Features
 
 - Has two release channels: Stable and Nightly

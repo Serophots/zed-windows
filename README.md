@@ -8,7 +8,7 @@ These releases are transparently built against the latest release tag of Zed usi
 
 ## Builds
 
-| Channel | Status | Latest Release |
+| Channel | Workflow Status | Latest Successful Release |
 | ------- | ------ | -------------- |
 | Stable | [![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml) | [![Stable Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=v*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases/latest) |
 | Nightly | [![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml) | [![Nightly Release](https://img.shields.io/github/v/release/xarunoba/zed-windows?sort=date&filter=nightly-*&logo=zedindustries)](https://github.com/xarunoba/zed-windows/releases?q=nightly&expanded=true) |

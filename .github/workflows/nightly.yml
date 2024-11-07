@@ -113,4 +113,6 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip
+            zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip.sha256
             zed-nightly-opengl-${{ needs.check.outputs.date }}.zip
+            zed-nightly-opengl-${{ needs.check.outputs.date }}.zip.sha256

@@ -65,10 +65,14 @@ jobs:
           ref: ${{ needs.check.outputs.latest_release }}
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Set release channel to nightly
+        run: |
+          echo "stable" > crates/zed/RELEASE_CHANNEL
       - name: Build to ${{ matrix.build_type }}
         shell: powershell
         run: |
           $env:RUSTFLAGS="--cfg ${{ matrix.build_type }}"
+          $env:ZED_UPDATE_EXPLANATION="Auto-updater is disabled for this build (xarunoba/zed-windows)"
           cargo build --release
       - name: Archive ${{ matrix.build_type }} build
         uses: actions/upload-artifact@v4

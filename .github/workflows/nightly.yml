@@ -59,6 +59,7 @@ jobs:
         shell: powershell
         run: |
           $env:RUSTFLAGS="--cfg ${{ matrix.build_type }}"
+          $env:ZED_UPDATE_EXPLANATION="Auto-updater is disabled for this build (xarunoba/zed-windows)"
           cargo build --release
       - name: Archive ${{ matrix.build_type }} build
         uses: actions/upload-artifact@v4

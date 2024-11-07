@@ -98,7 +98,7 @@ jobs:
           zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan/*
           zip -r zed-opengl-${{ needs.check.outputs.latest_release }}.zip zed-opengl/*
       - name: Generate Changelog
-        run: echo "See [Zed release notes](https://github.com/zed-industries/zed/releases/tag/${{ needs.check.outputs.latest_release }})." >> CHANGELOG.txt
+        run: echo "See [Zed release note](https://github.com/zed-industries/zed/releases/tag/${{ needs.check.outputs.latest_release }}) for more information." >> CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
         with:

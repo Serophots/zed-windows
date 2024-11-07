@@ -12,7 +12,6 @@ on:
         default: false
 
 jobs:
-
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -24,7 +23,6 @@ jobs:
         run: |
           latest_release=$(curl -s "https://api.github.com/repos/zed-industries/zed/releases/latest" | jq -r .tag_name)
           echo "tag=$latest_release" >> $GITHUB_OUTPUT
-
       - name: Check if there is a new release
         id: check_release
         run: |
@@ -46,28 +44,23 @@ jobs:
       - name: Enable long paths in Git
         run: |
           git config --system core.longpaths true
-
       - name: Enable long paths in Windows
         shell: powershell
         run: |
           New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
             -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
-
       - name: Checkout Zed
         uses: actions/checkout@v4
         with:
           repository: zed-industries/zed
           ref: ${{ needs.check.outputs.latest_release }}
-
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
-
       - name: Build to ${{ matrix.build_type }}
         shell: powershell
         run: |
           $env:RUSTFLAGS="--cfg ${{ matrix.build_type }}"
           cargo build --release
-      
       - name: Archive ${{ matrix.build_type }} build
         uses: actions/upload-artifact@v4
         with:
@@ -85,22 +78,22 @@ jobs:
         with:
           name: zed-vulkan-${{ needs.check.outputs.latest_release }}
           path: zed-vulkan
-
       - name: Download OpenGL ES release artifact
         uses: actions/download-artifact@v4
         with:
           name: zed-opengl-${{ needs.check.outputs.latest_release }}
           path: zed-opengl
-
       - name: Zip the Vulkan and OpenGL ES builds
         run: |
           zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan/*
           zip -r zed-opengl-${{ needs.check.outputs.latest_release }}.zip zed-opengl/*
-
+      - name: Generate Changelog
+        run: echo "See [Zed release notes](https://github.com/zed-industries/zed/releases/tag/${{ needs.check.outputs.latest_release }})." >> CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Zed for Windows ${{ needs.check.outputs.latest_release }}
+          body_path: CHANGELOG.txt
           tag_name: ${{ needs.check.outputs.latest_release }}
           draft: false
           make_latest: true

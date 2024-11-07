@@ -65,26 +65,29 @@ jobs:
         run: |
           $env:RUSTFLAGS="--cfg vulkan" 
           cargo build --release
-          mv target/release/zed.exe target/release/zed-vulkan.exe -Force
+      
+      - name: Archive Vulkan build
+        uses: actions/upload-artifact@v4
+        with:
+          name: zed-vulkan-${{ needs.check.outputs.latest_release }}
+          path: target/release/zed.exe
+      
+      - name: Cleanup build artifacts
+        shell: powershell
+        run: |
+          Remove-Item -Path target/release/zed.exe -Force
 
       - name: Build to OpenGL ES
         shell: powershell
         run: |
           $env:RUSTFLAGS="--cfg gles"
           cargo build --release
-          mv target/release/zed.exe target/release/zed-gles.exe -Force
-
-      - name: Archive Vulkan build
-        uses: actions/upload-artifact@v4
-        with:
-          name: zed-vulkan-${{ needs.check.outputs.latest_release }}
-          path: target/release/zed-vulkan.exe
 
       - name: Archive OpenGL ES build
         uses: actions/upload-artifact@v4
         with:
           name: zed-gles-${{ needs.check.outputs.latest_release }}
-          path: target/release/zed-gles.exe
+          path: target/release/zed.exe
 
   release:
     needs: [check, build]
@@ -96,16 +99,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: zed-vulkan-${{ needs.check.outputs.latest_release }}
+          path: zed-vulkan
 
       - name: Download OpenGL ES release artifact
         uses: actions/download-artifact@v4
         with:
           name: zed-gles-${{ needs.check.outputs.latest_release }}
+          path: zed-gles
 
       - name: Zip the Vulkan and OpenGL ES builds
         run: |
-          zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan.exe
-          zip -r zed-gles-${{ needs.check.outputs.latest_release }}.zip zed-gles.exe
+          zip -r zed-vulkan-${{ needs.check.outputs.latest_release }}.zip zed-vulkan/*
+          zip -r zed-gles-${{ needs.check.outputs.latest_release }}.zip zed-gles/*
 
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2

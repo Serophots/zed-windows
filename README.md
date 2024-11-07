@@ -1,6 +1,7 @@
 # Zed Builds for Windows (Unofficial)
 
-[![Release](https://github.com/xarunoba/zed-windows/actions/workflows/release.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/release.yml)
+[![Stable](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/stable.yml)
+[![Nightly](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml/badge.svg)](https://github.com/xarunoba/zed-windows/actions/workflows/nightly.yml)
 
 This repository contains unnofficial builds of [Zed](https://github.com/zed-industries/zed) for Windows.
 

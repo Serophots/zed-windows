@@ -81,10 +81,10 @@ jobs:
           path: zed-opengl
       - name: Zip the Vulkan build
         working-directory: zed-vulkan
-        run: zip ../zed-vulkan-${{ needs.check.outputs.date }}.zip zed.exe
+        run: zip ../zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip zed.exe
       - name: Zip the OpenGL ES build
         working-directory: zed-opengl
-        run: zip ../zed-opengl-${{ needs.check.outputs.date }}.zip zed.exe
+        run: zip ../zed-nightly-opengl-${{ needs.check.outputs.date }}.zip zed.exe
       - name: Generate Changelog
         run: echo "See [Zed](https://github.com/zed-industries/zed) for more information." > CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release

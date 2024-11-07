@@ -45,7 +45,7 @@ jobs:
   build:
     runs-on: windows-latest
     needs: check
-    if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true'
+    if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true' || github.event_name == 'push'
     strategy:
       matrix:
         build_type: [vulkan, opengl]

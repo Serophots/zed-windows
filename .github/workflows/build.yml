@@ -63,16 +63,16 @@ jobs:
       - name: Build to Vulkan
         shell: powershell
         run: |
-          $env:RUSTFLAGS="--cfg vulkan"; 
+          $env:RUSTFLAGS="--cfg vulkan" 
           cargo build --release
-          mv target/release/zed.exe target/release/zed-vulkan.exe
+          mv target/release/zed.exe target/release/zed-vulkan.exe -Force
 
       - name: Build to OpenGL ES
         shell: powershell
         run: |
-          $env:RUSTFLAGS="--cfg gles";
+          $env:RUSTFLAGS="--cfg gles"
           cargo build --release
-          mv target/release/zed.exe target/release/zed-gles.exe
+          mv target/release/zed.exe target/release/zed-gles.exe -Force
 
       - name: Archive Vulkan build
         uses: actions/upload-artifact@v4

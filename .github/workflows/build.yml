@@ -79,7 +79,7 @@ jobs:
           path: target-gles/release/zed.exe
 
   release:
-    needs: build
+    needs: [check, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write

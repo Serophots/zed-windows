@@ -100,8 +100,15 @@ jobs:
         run: |
             sha256sum zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip > zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip.sha256
             sha256sum zed-nightly-opengl-${{ needs.check.outputs.date }}.zip > zed-nightly-opengl-${{ needs.check.outputs.date }}.zip.sha256
+      - name: Get Tag Information
+        id: tag_info
+        run: |
+          tag_info=$(curl -s "https://api.github.com/repos/zed-industries/zed/git/refs/tags/nightly"  | jq -r '.object.sha')
+          echo "tag_info=$tag_info" >> $GITHUB_OUTPUT
+      - name: Generate Release Notes from Zed
+        run: curl -s "https://api.github.com/repos/zed-industries/zed/git/commits/${{ steps.tag_info.outputs.tag_info }}" > CHANGELOG.txt
       - name: Generate Changelog
-        run: echo "See [Zed release note](https://github.com/zed-industries/zed/releases/tag/nightly) for more information." > CHANGELOG.txt
+        run: echo "\n---\nSee [Zed release note](https://github.com/zed-industries/zed/releases/tag/nightly) for more information." > CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
         with:

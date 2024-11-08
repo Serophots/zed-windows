@@ -71,10 +71,10 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-            cache-key: ${{ matrix.build_type }}
-            toolchain: ${{ steps.toolchain.outputs.channel }}
-            target: "wasm32-wasip1"
-            components: "rustfmt, clippy"
+          cache-key: ${{ matrix.build_type }}
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+          target: "wasm32-wasip1"
+          components: "rustfmt, clippy"
       - name: Set release channel to nightly
         run: |
           echo "preview" > crates/zed/RELEASE_CHANNEL
@@ -115,8 +115,8 @@ jobs:
         run: zip ../zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip zed.exe
       - name: Calculate SHA256 checksum
         run: |
-            sha256sum zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip > zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
-            sha256sum zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip > zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
+          sha256sum zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip > zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
+          sha256sum zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip > zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
       - name: Generate Release Notes from Zed
         run: curl -s https://api.github.com/repos/zed-industries/zed/releases/tags/${{ needs.check.outputs.latest_prerelease }} | jq -r .body > CHANGELOG.txt
       - name: Generate Release Footer

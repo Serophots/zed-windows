@@ -126,7 +126,8 @@ jobs:
           body_path: CHANGELOG.txt
           tag_name: ${{ needs.check.outputs.latest_prerelease }}
           draft: false
-          make_latest: true
+          make_latest: false
+          prerelease: true
           fail_on_unmatched_files: true
           files: |
             zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip

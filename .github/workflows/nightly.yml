@@ -58,10 +58,13 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-            cache-key: ${{ matrix.build_type }}
-            toolchain: ${{ steps.toolchain.outputs.channel }}
-            target: "wasm32-wasip1"
-            components: "rustfmt, clippy"
+          cache-key: ${{ matrix.build_type }}
+          toolchain: ${{ steps.toolchain.outputs.channel }}
+          target: "wasm32-wasip1"
+          components: "rustfmt, clippy"
+      - name: Set release channel to nightly
+        run: |
+          echo "nightly" > crates/zed/RELEASE_CHANNEL
       - name: Build to ${{ matrix.build_type }}
         shell: powershell
         run: |
@@ -98,8 +101,8 @@ jobs:
         run: zip ../zed-nightly-opengl-${{ needs.check.outputs.date }}.zip zed.exe
       - name: Calculate SHA256 checksum
         run: |
-            sha256sum zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip > zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip.sha256
-            sha256sum zed-nightly-opengl-${{ needs.check.outputs.date }}.zip > zed-nightly-opengl-${{ needs.check.outputs.date }}.zip.sha256
+          sha256sum zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip > zed-nightly-vulkan-${{ needs.check.outputs.date }}.zip.sha256
+          sha256sum zed-nightly-opengl-${{ needs.check.outputs.date }}.zip > zed-nightly-opengl-${{ needs.check.outputs.date }}.zip.sha256
       - name: Get Tag Information
         id: tag_info
         run: |

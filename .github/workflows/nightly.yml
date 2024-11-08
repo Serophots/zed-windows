@@ -108,7 +108,7 @@ jobs:
       - name: Generate Release Notes from Zed
         run: curl -s "https://api.github.com/repos/zed-industries/zed/git/commits/${{ steps.tag_info.outputs.tag_info }}" | jq -r .message > CHANGELOG.txt
       - name: Generate Changelog
-        run: echo "\n---\nSee [Zed release note](https://github.com/zed-industries/zed/releases/tag/nightly) for more information." > CHANGELOG.txt
+        run: echo -e "\n---\nSee [Zed release note](https://github.com/zed-industries/zed/releases/tag/nightly) for more information." > CHANGELOG.txt
       - name: Upload release build artifact to GitHub Release
         uses: softprops/action-gh-release@v2
         with:

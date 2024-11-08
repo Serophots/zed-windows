@@ -1,0 +1,135 @@
+name: Build and Release Zed for Windows (Preview)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/preview.yml"
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      manual_release:
+        description: "Manual release?"
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      latest_prerelease: ${{ steps.latest_prerelease.outputs.tag }}
+      new_release: ${{ steps.check_release.outputs.new_release }}
+    steps:
+      - name: Get latest release tag from Zed
+        id: latest_prerelease
+        run: |
+          latest_prerelease=$(curl -s "https://api.github.com/repos/zed-industries/zed/releases" | jq -r 'map(select(.prerelease)) | first | .tag_name)
+          echo "tag=$latest_prerelease" >> $GITHUB_OUTPUT
+      - name: Check if there is a new release
+        id: check_release
+        run: |
+          my_release=$(curl -s "https://api.github.com/repos/xarunoba/zed-windows/releases" | jq -r 'map(select(.prerelease)) | first | .tag_name)
+          if [ "$my_release" != "${{ steps.latest_prerelease.outputs.tag }}" ]; then
+            echo "new_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "new_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    runs-on: windows-latest
+    needs: check
+    if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true' || github.event_name == 'push'
+    strategy:
+      matrix:
+        build_type: [vulkan, opengl]
+    steps:
+      - name: Enable long paths in Git
+        run: |
+          git config --system core.longpaths true
+      - name: Enable long paths in Windows
+        shell: powershell
+        run: |
+          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
+            -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+      - name: Checkout Zed
+        uses: actions/checkout@v4
+        with:
+          repository: zed-industries/zed
+          ref: ${{ needs.check.outputs.latest_prerelease }}
+      - name: Get toolchain channel
+        id: toolchain
+        shell: powershell
+        run: |
+          $channel = (Get-Content rust-toolchain.toml | Select-String -Pattern 'channel' | ForEach-Object { ($_ -split '"')[1] })
+          echo "channel=$channel" >> $GITHUB_OUTPUT
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: ${{ steps.toolchain.outputs.channel }}
+            target: "wasm32-wasip1"
+            components: "rustfmt, clippy"
+      - name: Set release channel to nightly
+        run: |
+          echo "preview" > crates/zed/RELEASE_CHANNEL
+      - name: Build to ${{ matrix.build_type }}
+        shell: powershell
+        run: |
+          $env:RUSTFLAGS="--cfg ${{ matrix.build_type }}"
+          $env:ZED_UPDATE_EXPLANATION="Auto-updater is disabled for this build (xarunoba/zed-windows)"
+          cargo build --release
+      - name: Archive ${{ matrix.build_type }} build
+        uses: actions/upload-artifact@v4
+        with:
+          name: zed-${{ matrix.build_type }}
+          path: target/release/zed.exe
+
+  release:
+    needs: [check, build]
+    if: needs.check.outputs.new_release == 'true' || github.event.inputs.manual_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Vulkan release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: zed-vulkan
+          path: zed-vulkan
+      - name: Download OpenGL ES release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: zed-opengl
+          path: zed-opengl
+      - name: Zip the Vulkan build
+        working-directory: zed-vulkan
+        run: zip ../zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip zed.exe
+      - name: Zip the OpenGL ES build
+        working-directory: zed-opengl
+        run: zip ../zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip zed.exe
+      - name: Calculate SHA256 checksum
+        run: |
+            sha256sum zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip > zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
+            sha256sum zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip > zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
+      - name: Generate Changelog
+        run: echo "See [Zed release note](https://github.com/zed-industries/zed/releases/tag/${{ needs.check.outputs.latest_prerelease }}) for more information." >> CHANGELOG.txt
+      - name: Upload release build artifact to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Zed for Windows ${{ needs.check.outputs.latest_prerelease }}
+          body_path: CHANGELOG.txt
+          tag_name: ${{ needs.check.outputs.latest_prerelease }}
+          draft: false
+          make_latest: true
+          fail_on_unmatched_files: true
+          files: |
+            zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip
+            zed-preview-vulkan-${{ needs.check.outputs.latest_prerelease }}.zip.sha256
+            zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip
+            zed-preview-opengl-${{ needs.check.outputs.latest_prerelease }}.zip.sha256

@@ -19,7 +19,23 @@ These releases are transparently built against the latest release tag of Zed usi
 - Auto-updater is properly disabled for these builds using the `ZED_UPDATE_EXPLANATION` environment variable
 - Uses proper release channels for Zed via `crates/zed/RELEASE_CHANNEL`
 
-## Usage
+## Installation & Usage
+
+### Scripts
+
+You can install Zed via PowerShell:
+```
+irm https://raw.githubusercontent.com/xarunoba/zed-windows/refs/heads/main/install.ps1 | iex
+```
+
+Or if you want to uninstall Zed that has been installed via the install script:
+```
+irm https://raw.githubusercontent.com/xarunoba/zed-windows/refs/heads/main/uninstall.ps1 | iex
+```
+
+Just run Zed either from the Start Menu shortcut or by running `zed` in the command line.
+
+### Manually
 
 Download the latest release from the [Releases](https://github.com/xarunoba/zed-windows/releases) page.
 

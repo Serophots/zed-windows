@@ -24,6 +24,7 @@ These releases are transparently built against the latest release tag of Zed usi
 ### Scripts
 
 You can install Zed via PowerShell:
+(You can also use this script to update Zed if it has been installed previously using the install script)
 ```
 irm https://raw.githubusercontent.com/xarunoba/zed-windows/refs/heads/main/install.ps1 | iex
 ```

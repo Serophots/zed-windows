@@ -29,7 +29,7 @@ function Uninstall-Zed {
         }
     }
 
-    # Remove executable and installation metadata
+    # Remove executable, installation metadata, and Start Menu shortcut
     if (Test-Path $exePath) {
         Remove-Item -Path $exePath -Force -ErrorAction SilentlyContinue
         if (-not (Test-Path $exePath)) {
@@ -56,10 +56,33 @@ function Uninstall-Zed {
         # Do not set failure for missing metadata; it's already checked above.
     }
 
+    if (Test-Path $shortcutPath) {
+        Remove-Item -Path $shortcutPath -Force -ErrorAction SilentlyContinue
+        if (-not (Test-Path $shortcutPath)) {
+            Write-Host "Removed Start Menu shortcut: $shortcutPath"
+        } else {
+            Write-Host "Failed to remove Start Menu shortcut: $shortcutPath"
+            $uninstallationFailed = $true
+        }
+    } else {
+        Write-Host "Shortcut not found: $shortcutPath"
+    }
+
+    # Get current user PATH variable
+    $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+
+    # Check if the install directory is in the PATH and remove it
+    if ($userPath -like "*$installDir*") {
+        $newUserPath = ($userPath -split ';') | Where-Object { $_ -ne "$installDir" } -join ';'
+        [Environment]::SetEnvironmentVariable('Path', "$newUserPath", 'User')
+        Write-Host "Removed Zed from PATH environment variable."
+    } else {
+        Write-Host "Zed was not in PATH environment variable."
+    }
+
     # Prompt user for directory removal choice
     if ((Test-Path $installDir) -and (-not $uninstallationFailed)) {
         $removeDataChoice = Read-Host "Do you want to remove the installation directory as well? (Y/N)"
-        
         if ($removeDataChoice -like 'Y*') {
             Remove-Item -Path $installDir -Recurse -Force -ErrorAction SilentlyContinue
             if (-not (Test-Path $installDir)) {
@@ -67,32 +90,6 @@ function Uninstall-Zed {
             } else {
                 Write-Host "Failed to remove installation directory: $installDir"
                 $uninstallationFailed = $true
-            }
-            
-            # Remove Start Menu shortcut
-            if (Test-Path $shortcutPath) {
-                Remove-Item -Path $shortcutPath -Force -ErrorAction SilentlyContinue
-                if (-not (Test-Path $shortcutPath)) {
-                    Write-Host "Removed Start Menu shortcut: $shortcutPath"
-                } else {
-                    Write-Host "Failed to remove Start Menu shortcut: $shortcutPath"
-                    $uninstallationFailed = $true
-                }
-            } else {
-                Write-Host "Shortcut not found: $shortcutPath"
-            }
-            
-            # Optionally, remove PATH entry (comment out if not needed)
-            # Get current user PATH variable
-            $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-            
-            # Check if the install directory is in the PATH and remove it
-            if ($userPath -like "*$installDir*") {
-                $newUserPath = ($userPath -split ';') | Where-Object { $_ -ne "$installDir" } -join ';'
-                [Environment]::SetEnvironmentVariable('Path', "$newUserPath", 'User')
-                Write-Host "Removed Zed from PATH environment variable."
-            } else {
-                Write-Host "Zed was not in PATH environment variable."
             }
         } else {
             Write-Host "Installation directory retained. Only executable and metadata have been removed."

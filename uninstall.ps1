@@ -1,26 +1,95 @@
-# Function to uninstall Zed
-function Uninstall-Zed {
-    # Define the installation directory
-    $installDir = Join-Path $env:LOCALAPPDATA 'Zed'
-    $exePath = Join-Path $installDir 'zed.exe'
-    $metadataPath = Join-Path $installDir 'zed-install-meta.json'
-    $startMenuPath = Join-Path ([Environment]::GetFolderPath('StartMenu')) 'Programs'
-    $shortcutPath = Join-Path $startMenuPath 'Zed.lnk'
+# Function to get installation metadata
+function Get-InstallationMetadata {
+    param (
+        [string]$InstallDir
+    )
 
-    # Initialize a variable to track uninstallation success
-    $uninstallationFailed = $false
-
-    # Check for existing installation and metadata
-    if (-not (Test-Path $exePath) -and -not (Test-Path $metadataPath)) {
-        Write-Host "Zed is not installed."
-        $uninstallationFailed = $true
+    $metadataPath = Join-Path $InstallDir "zed-install-meta.json"
+    if (Test-Path $metadataPath) {
+        $metadata = Get-Content $metadataPath -Encoding UTF8 | ConvertFrom-Json
+        return @{
+            Channel = $metadata.channel
+            Version = $metadata.version
+            Variant = $metadata.variant
+            InstalledDate = [DateTime]::Parse($metadata.installedDate)
+        }
     }
+    return $null
+}
 
-    # Confirm uninstallation if Zed is installed
-    if (-not $uninstallationFailed) {
-        $confirmation = Read-Host "Are you sure you want to uninstall Zed? (Y/N)"
-        if ($confirmation -notlike 'Y*') {
-            Write-Host "Uninstallation cancelled."
+# Installation directory
+$installDir = Join-Path $env:LOCALAPPDATA 'Zed'
+$exePath = Join-Path $installDir 'zed.exe'
+$configDir = Join-Path $env:APPDATA 'Zed'
+
+# Check if Zed is installed
+if (-not (Test-Path $installDir)) {
+    Write-Host "Zed does not appear to be installed in the default location ($installDir)."
+
+    # Add pause before exit
+    Write-Host "`nPress any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    exit 0
+}
+
+# Get installation metadata
+$metadata = Get-InstallationMetadata -InstallDir $installDir
+if ($metadata) {
+    Write-Host "Found Zed installation:"
+    Write-Host "Version: $($metadata.Version)"
+    Write-Host "Channel: $($metadata.Channel)"
+    Write-Host "Graphics backend: $($metadata.Variant)"
+    Write-Host "Installed on: $($metadata.InstalledDate)"
+}
+
+# Explain uninstallation options
+Write-Host "`nUninstallation options:"
+Write-Host "1. Complete uninstall (removes everything including configurations)"
+Write-Host "2. Partial uninstall (preserves user configurations)"
+
+do {
+    $choice = Read-Host "Enter your choice (1-2)"
+    switch ($choice) {
+        '1' {
+            $preserveConfig = $false
+            Write-Host "Selected: Complete uninstall"
+        }
+        '2' {
+            $preserveConfig = $true
+            Write-Host "Selected: Partial uninstall (configurations will be preserved)"
+        }
+        default { Write-Host "Invalid selection. Please enter 1 or 2." }
+    }
+} while ($choice -notin '1','2')
+
+# Confirm uninstallation
+if ($preserveConfig) {
+    Write-Host "`nThis will uninstall Zed but preserve your configurations in: $configDir"
+} else {
+    Write-Host "`nThis will completely uninstall Zed and remove all associated files, including configurations."
+}
+
+$confirm = Read-Host "Do you want to proceed? (Y/N)"
+if ($confirm -notlike 'Y*') {
+    Write-Host "Uninstallation cancelled."
+
+    # Add pause before exit
+    Write-Host "`nPress any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    exit 0
+}
+
+try {
+    # Check if Zed is running
+    $zedProcess = Get-Process -Name "zed" -ErrorAction SilentlyContinue
+    if ($zedProcess) {
+        Write-Host "Zed is currently running. Please close it before uninstalling."
+        $closeChoice = Read-Host "Would you like to close Zed now? (Y/N)"
+        if ($closeChoice -like 'Y*') {
+            $zedProcess | Stop-Process -Force
+            Start-Sleep -Seconds 2  # Wait for process to close
+        } else {
+            Write-Host "Uninstallation cancelled. Please close Zed and run the uninstaller again."
 
             # Add pause before exit
             Write-Host "`nPress any key to exit..."
@@ -29,91 +98,58 @@ function Uninstall-Zed {
         }
     }
 
-    # Remove executable, installation metadata, and Start Menu shortcut
-    if (Test-Path $exePath) {
-        Remove-Item -Path $exePath -Force -ErrorAction SilentlyContinue
-        if (-not (Test-Path $exePath)) {
-            Write-Host "Removed executable: $exePath"
-        } else {
-            Write-Host "Failed to remove executable: $exePath"
-            $uninstallationFailed = $true
-        }
-    } else {
-        Write-Host "Executable not found: $exePath"
-        $uninstallationFailed = $true
-    }
-
-    if (Test-Path $metadataPath) {
-        Remove-Item -Path $metadataPath -Force -ErrorAction SilentlyContinue
-        if (-not (Test-Path $metadataPath)) {
-            Write-Host "Removed metadata file: $metadataPath"
-        } else {
-            Write-Host "Failed to remove metadata file: $metadataPath"
-            $uninstallationFailed = $true
-        }
-    } else {
-        Write-Host "Metadata file not found: $metadataPath"
-        # Do not set failure for missing metadata; it's already checked above.
-    }
-
+    # Remove Start Menu shortcut
+    $startMenuPath = Join-Path ([Environment]::GetFolderPath('StartMenu')) 'Programs'
+    $shortcutPath = Join-Path $startMenuPath 'Zed.lnk'
     if (Test-Path $shortcutPath) {
-        Remove-Item -Path $shortcutPath -Force -ErrorAction SilentlyContinue
-        if (-not (Test-Path $shortcutPath)) {
-            Write-Host "Removed Start Menu shortcut: $shortcutPath"
-        } else {
-            Write-Host "Failed to remove Start Menu shortcut: $shortcutPath"
-            $uninstallationFailed = $true
-        }
-    } else {
-        Write-Host "Shortcut not found: $shortcutPath"
+        Write-Host "Removing Start Menu shortcut..."
+        Remove-Item $shortcutPath -Force
     }
 
-    # Get current user PATH variable
+    # Remove from PATH
+    Write-Host "Removing Zed from PATH environment variable..."
     $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+    $newPath = ($userPath -split ';' | Where-Object { $_ -ne $installDir }) -join ';'
+    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
 
-    # Check if the install directory is in the PATH and remove it
-    if ($userPath -like "*$installDir*") {
-        $newUserPath = ($userPath -split ';') | Where-Object { $_ -ne "$installDir" } -join ';'
-        [Environment]::SetEnvironmentVariable('Path', "$newUserPath", 'User')
-        Write-Host "Removed Zed from PATH environment variable."
-    } else {
-        Write-Host "Zed was not in PATH environment variable."
-    }
-
-    # Prompt user for directory removal choice
-    if ((Test-Path $installDir) -and (-not $uninstallationFailed)) {
-        $removeDataChoice = Read-Host "Do you want to remove the installation directory as well? (Y/N)"
-        if ($removeDataChoice -like 'Y*') {
-            Remove-Item -Path $installDir -Recurse -Force -ErrorAction SilentlyContinue
-            if (-not (Test-Path $installDir)) {
-                Write-Host "Removed installation directory: $installDir"
-            } else {
-                Write-Host "Failed to remove installation directory: $installDir"
-                $uninstallationFailed = $true
+    if ($preserveConfig) {
+        # Remove only specific files/directories while preserving configs
+        Write-Host "Removing Zed executable and related files..."
+        Get-ChildItem -Path $installDir | ForEach-Object {
+            # Skip the config directory if it exists in the install directory
+            if ($_.FullName -ne $configDir) {
+                Remove-Item $_.FullName -Recurse -Force
             }
-        } else {
-            Write-Host "Installation directory retained. Only executable and metadata have been removed."
+        }
+        Write-Host "User configurations preserved in: $configDir"
+    } else {
+        # Remove everything
+        Write-Host "Removing all Zed files and configurations..."
+        Remove-Item $installDir -Recurse -Force
+        if (Test-Path $configDir) {
+            Remove-Item $configDir -Recurse -Force
         }
     }
 
-    # Add pause before exit with prompt for user action
-    if ($uninstallationFailed) {
-        Write-Host "`nUninstallation encountered some issues."
-    } else {
-        Write-Host "`nUninstallation completed successfully!"
+    Write-Host "`nZed has been successfully uninstalled!"
+    if ($preserveConfig) {
+        Write-Host "Your configurations have been preserved and can be reused with a future installation."
     }
-
-    # Prompt user to press any key to exit
-    Write-Host "`nPress any key to exit..."
-    [void][System.Console]::ReadKey($true)
-
-    # Exit with appropriate code based on uninstallation status
-    if ($uninstallationFailed) {
-        exit 1  # Exit with error code 1 for failure
-    } else {
-        exit 0  # Exit with code 0 for success
-    }
+    Write-Host "Please restart your terminal for PATH changes to take effect."
+}
+catch {
+    Write-Host "`nError: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Uninstallation failed. Please try again or remove the files manually."
+    $script:uninstallationFailed = $true
 }
 
-# Run the uninstallation function directly
-Uninstall-Zed
+# Add pause before exit
+Write-Host "`nPress any key to exit..."
+$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
+# Exit with appropriate code
+if ($script:uninstallationFailed) {
+    exit 1
+} else {
+    exit 0
+}

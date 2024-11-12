@@ -34,7 +34,7 @@ jobs:
       - name: Check if there is a new release
         id: check_release
         run: |
-          my_release=$(curl -s "https://api.github.com/repos/xarunoba/zed-windows/releases" | jq -r 'map(select(.prerelease)) | first | .tag_name')
+          my_release=$(curl -s "https://api.github.com/repos/xarunoba/zed-windows/releases" | jq -r 'map(select(.prerelease and (.tag_name | endswith("-pre")))) | first | .tag_name')
           if [ "$my_release" != "${{ steps.latest_prerelease.outputs.tag }}" ]; then
             echo "new_release=true" >> $GITHUB_OUTPUT
           else

@@ -14,18 +14,33 @@ function Get-ZedRelease {
         'Accept' = 'application/vnd.github.v3+json'
     }
 
-    $releases = Invoke-RestMethod -Uri 'https://api.github.com/repos/xarunoba/zed-windows/releases' -Headers $headers
+    $release = $null
+    $page = 1
 
-    switch ($Channel) {
-        'Stable' {
-            $release = $releases | Where-Object { -not $_.prerelease } | Select-Object -First 1
+    while (-not $release) {
+        $response = Invoke-RestMethod -Uri "https://api.github.com/repos/xarunoba/zed-windows/releases?page=$page" -Headers $headers
+
+        if ($response.Count -eq 0) {
+            break
         }
-        'Preview' {
-            $release = $releases | Where-Object { $_.prerelease -and $_.tag_name -like '*-pre*' } | Select-Object -First 1
+
+        switch ($Channel) {
+            'Stable' {
+                $release = $response | Where-Object { -not $_.prerelease } | Sort-Object -Property created_at -Descending | Select-Object -First 1
+            }
+            'Preview' {
+                $release = $response | Where-Object { $_.prerelease -and $_.tag_name -like '*-pre*' } | Sort-Object -Property created_at -Descending | Select-Object -First 1
+            }
+            'Nightly' {
+                $release = $response | Where-Object { $_.prerelease -and $_.tag_name -like '*-nightly*' } | Sort-Object -Property created_at -Descending | Select-Object -First 1
+            }
         }
-        'Nightly' {
-            $release = $releases | Where-Object { $_.prerelease -and $_.tag_name -like '*-nightly*' } | Select-Object -First 1
-        }
+
+        $page++
+    }
+
+    if (-not $release) {
+        throw "Could not find appropriate Zed release for channel: $Channel"
     }
 
     # Find the correct asset based on channel pattern and variant

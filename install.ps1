@@ -26,14 +26,18 @@ function Get-ZedRelease {
 
         switch ($Channel) {
             'Stable' {
-                $release = $response | Where-Object { -not $_.prerelease } | Sort-Object -Property created_at -Descending | Select-Object -First 1
+                $release = $response | Where-Object { -not $_.prerelease } | Select-Object -First 1
             }
             'Preview' {
-                $release = $response | Where-Object { $_.prerelease -and $_.tag_name -like '*-pre*' } | Sort-Object -Property created_at -Descending | Select-Object -First 1
+                $release = $response | Where-Object { $_.prerelease -and $_.tag_name -like '*-pre*' } | Select-Object -First 1
             }
             'Nightly' {
-                $release = $response | Where-Object { $_.prerelease -and $_.tag_name -like '*-nightly*' } | Sort-Object -Property created_at -Descending | Select-Object -First 1
+                $release = $response | Where-Object { $_.prerelease -and $_.tag_name -like '*-nightly*' } | Select-Object -First 1
             }
+        }
+
+        if ($release) {
+            break
         }
 
         $page++

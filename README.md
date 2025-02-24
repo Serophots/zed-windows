@@ -1,5 +1,7 @@
 # Zed for Windows (Unofficial)
 
+**2025-24-2: I'm archiving this as this as I have moved back to my previous code editor as there have been a lot of issues regarding LSPs being broken and what not making me unproductive with Zed. I will come back when things get stable and as of now, unfortunately I have to archive this repository. Feel free to fork this as you want, no problem. :)**
+
 This repository contains unofficial builds of [Zed](https://github.com/zed-industries/zed) for Windows.
 
 ***Disclaimer**: These builds may break at any time as they are not officially supported by Zed Industries.*
